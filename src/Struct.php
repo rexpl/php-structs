@@ -27,25 +27,7 @@ abstract class Struct
         foreach ($properties as $property) {
             // The property is present in the source we can work from here.
             if ($source->has($property->key)) {
-                $value = $source->get($property->key);
-                // The developer requested validation we run the value through his validator.
-                if ($options->validate) {
-                    $property->validator->validate($source, $property->key);
-                }
-                // Some kind of transformation is required before initializing this property
-                if ($property->transformation !== Transformation::None) {
-                    // The developer requested as structured array we build using the same options.
-                    if ($property->transformation === Transformation::ArrayStruct) {
-                        foreach ($value as &$element) {
-                            $element = new ($property->targetTransformation)($element, $options);
-                        }
-                    }
-                    // The type of the child is a struct so we build it as wel
-                    elseif ($property->transformation === Transformation::ChildStruct) {
-                        $value = new ($property->targetTransformation)($value, $options);
-                    }
-                }
-                $this->{$property->name} = $value;
+                $this->{$property->name} = $property->makeProperty($source, $options);
             }
             // the property is not present in the source:
             //  - if the property has a default value and "requireAllProperties" is true we throw an exception
