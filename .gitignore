@@ -1,0 +1,11 @@
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+.DS_Store
+
+/vendor
+composer.lock
