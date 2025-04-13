@@ -74,7 +74,7 @@ it('doesn\'t validate when validate=false', function () {
 
     ob_start();
     $struct = new class($data, $options) extends Struct {
-        #[\Rexpl\Struct\Validate(new \Tests\TestingObjects\OutputClassNameWhenRuleRuns())]
+        #[\Rexpl\Struct\Validate(new \Tests\Fixtures\OutputClassNameWhenRuleRuns())]
         public int $id;
     };
     $output = ob_get_clean();
@@ -91,12 +91,26 @@ it('runs validations when validate=true', function () {
 
     ob_start();
     $struct = new class($data, $options) extends Struct {
-        #[\Rexpl\Struct\Validate(new \Tests\TestingObjects\OutputClassNameWhenRuleRuns())]
+        #[\Rexpl\Struct\Validate(new \Tests\Fixtures\OutputClassNameWhenRuleRuns())]
         public int $id;
     };
     $output = ob_get_clean();
 
-    expect($output)->toBe(\Tests\TestingObjects\OutputClassNameWhenRuleRuns::class);
+    expect($output)->toBe(\Tests\Fixtures\OutputClassNameWhenRuleRuns::class);
+});
+
+test('validated state is false when validation is not run', function () {
+    $data = [
+        'id' => 42,
+    ];
+
+    $options = new Options(validate: false);
+
+    $struct = new class($data, $options) extends Struct {
+        public int $id;
+    };
+
+    expect($struct->struct()->isValidated())->toBeFalse();
 });
 
 test('validated state is true when validation is run', function () {
@@ -107,11 +121,8 @@ test('validated state is true when validation is run', function () {
     $options = new Options(validate: true);
 
     $struct = new class($data, $options) extends Struct {
-        #[\Rexpl\Struct\Validate(new \Tests\TestingObjects\OutputClassNameWhenRuleRuns())]
         public int $id;
     };
-
-    $this->expectOutputString(\Tests\TestingObjects\OutputClassNameWhenRuleRuns::class);
 
     expect($struct->struct()->isValidated())->toBeTrue();
 });

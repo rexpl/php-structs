@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\TestingObjects;
+namespace Tests\Fixtures;
 
 use Rexpl\Struct\Contracts\Rule;
 use Rexpl\Struct\Contracts\Source;
@@ -17,6 +17,6 @@ class OutputClassNameWhenRuleRuns implements Rule
 
     public function onlyRunWhenKeySet(): bool
     {
-        return false;
+        return true;
     }
 }

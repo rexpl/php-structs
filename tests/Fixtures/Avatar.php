@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\TestingObjects;
+namespace Tests\Fixtures;
 
 use Rexpl\Struct\Struct;
 

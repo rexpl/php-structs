@@ -8,8 +8,8 @@ use Rexpl\Struct\Validation\IsBoolean;
 use Rexpl\Struct\Validation\IsFloat;
 use Rexpl\Struct\Validation\IsInteger;
 use Rexpl\Struct\Validation\IsString;
-use Tests\TestingObjects\OutputClassNameWhenRuleRuns;
-use Tests\TestingObjects\ValidationTestCase;
+use Tests\Fixtures\OutputClassNameWhenRuleRuns;
+use Tests\Fixtures\ValidationTestCase;
 
 test('validation rule: :dataset', function (ValidationTestCase $case) {
         $source = new ArraySource(['data' => $case->value]);
@@ -155,13 +155,26 @@ it('runs next validations with required rule with value set', function () {
     expect($output)->toBe(OutputClassNameWhenRuleRuns::class);
 });
 
+test('doesn\'t run validation rules if key not set', function () {
+    $source = new ArraySource([]);
+
+    $validator = new Validator();
+    $validator->addRules(
+        new OutputClassNameWhenRuleRuns(),
+    );
+
+    $this->expectOutputString('');
+
+    $validator->validate($source, 'data');
+});
+
 test('deferred validation', function () {
     $struct = new class(['id' => 42]) extends Struct {
-        #[\Rexpl\Struct\Validate(new \Tests\TestingObjects\OutputClassNameWhenRuleRuns())]
+        #[\Rexpl\Struct\Validate(new \Tests\Fixtures\OutputClassNameWhenRuleRuns())]
         public int $id;
     };
 
-    $this->expectOutputString(\Tests\TestingObjects\OutputClassNameWhenRuleRuns::class);
+    $this->expectOutputString(\Tests\Fixtures\OutputClassNameWhenRuleRuns::class);
 
     $struct->struct()->validate();
 });

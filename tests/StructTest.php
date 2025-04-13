@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Rexpl\Struct\Struct;
-use Tests\TestingObjects\Avatar;
+use Tests\Fixtures\Avatar;
 
 it('instantiates a simple struct with one property from array', function () {
     $data = ['test' => 'hello'];
