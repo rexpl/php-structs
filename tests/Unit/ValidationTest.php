@@ -2,6 +2,7 @@
 
 use Rexpl\Struct\Internal\ArraySource;
 use Rexpl\Struct\Internal\Validator;
+use Rexpl\Struct\Struct;
 use Rexpl\Struct\Validation\IsArray;
 use Rexpl\Struct\Validation\IsBoolean;
 use Rexpl\Struct\Validation\IsFloat;
@@ -152,4 +153,15 @@ it('runs next validations with required rule with value set', function () {
     $output = ob_get_clean();
 
     expect($output)->toBe(OutputClassNameWhenRuleRuns::class);
+});
+
+test('deferred validation', function () {
+    $struct = new class(['id' => 42]) extends Struct {
+        #[\Rexpl\Struct\Validate(new \Tests\TestingObjects\OutputClassNameWhenRuleRuns())]
+        public int $id;
+    };
+
+    $this->expectOutputString(\Tests\TestingObjects\OutputClassNameWhenRuleRuns::class);
+
+    $struct->struct()->validate();
 });

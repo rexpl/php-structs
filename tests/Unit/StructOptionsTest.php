@@ -98,3 +98,20 @@ it('runs validations when validate=true', function () {
 
     expect($output)->toBe(\Tests\TestingObjects\OutputClassNameWhenRuleRuns::class);
 });
+
+test('validated state is true when validation is run', function () {
+    $data = [
+        'id' => 42,
+    ];
+
+    $options = new Options(validate: true);
+
+    $struct = new class($data, $options) extends Struct {
+        #[\Rexpl\Struct\Validate(new \Tests\TestingObjects\OutputClassNameWhenRuleRuns())]
+        public int $id;
+    };
+
+    $this->expectOutputString(\Tests\TestingObjects\OutputClassNameWhenRuleRuns::class);
+
+    expect($struct->struct()->isValidated())->toBeTrue();
+});

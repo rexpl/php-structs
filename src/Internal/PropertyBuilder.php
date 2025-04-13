@@ -83,9 +83,14 @@ final class PropertyBuilder
         }
     }
 
-    public function validate(Source $source): void
+    public function initValidation(Source $source): void
     {
         $this->validator->validate($source, $this->key);
+    }
+
+    public function deferredValidation(Source $source): void
+    {
+        $this->validator->validate($source, $this->name);
     }
 
     public function shouldMakeProperty(Source $source, Options $options): bool

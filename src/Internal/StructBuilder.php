@@ -6,6 +6,7 @@ namespace Rexpl\Struct\Internal;
 
 use Rexpl\Struct\Contracts\Source;
 use Rexpl\Struct\Options;
+use Rexpl\Struct\Struct;
 
 readonly class StructBuilder
 {
@@ -37,7 +38,7 @@ readonly class StructBuilder
 
         foreach ($this->properties as $property) {
             if ($options->validate) {
-                $property->validate($source);
+                $property->initValidation($source);
             }
             if ($property->shouldMakeProperty($source, $options)) {
                 $properties[] = [
@@ -47,5 +48,14 @@ readonly class StructBuilder
         }
 
         return $properties;
+    }
+
+    public function validateStruct(Struct $struct): void
+    {
+        $source = SourceFactory::create($struct);
+
+        foreach ($this->properties as $property) {
+            $property->deferredValidation($source);
+        }
     }
 }
