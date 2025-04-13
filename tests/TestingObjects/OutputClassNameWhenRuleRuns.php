@@ -14,4 +14,9 @@ class OutputClassNameWhenRuleRuns implements Rule
         echo static::class;
         return true;
     }
+
+    public function onlyRunWhenKeySet(): bool
+    {
+        return false;
+    }
 }

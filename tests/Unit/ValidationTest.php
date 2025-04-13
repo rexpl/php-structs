@@ -1,14 +1,17 @@
 <?php
 
+use Rexpl\Struct\Internal\ArraySource;
+use Rexpl\Struct\Internal\Validator;
 use Rexpl\Struct\Validation\IsArray;
 use Rexpl\Struct\Validation\IsBoolean;
 use Rexpl\Struct\Validation\IsFloat;
 use Rexpl\Struct\Validation\IsInteger;
 use Rexpl\Struct\Validation\IsString;
+use Tests\TestingObjects\OutputClassNameWhenRuleRuns;
 use Tests\TestingObjects\ValidationTestCase;
 
 test('validation rule: :dataset', function (ValidationTestCase $case) {
-        $source = new \Rexpl\Struct\Sources\ArraySource(['data' => $case->value]);
+        $source = new ArraySource(['data' => $case->value]);
 
         if ($case->fail) {
             expect(
@@ -59,11 +62,13 @@ test('validation rule: :dataset', function (ValidationTestCase $case) {
     ]);
 
 it('skips next validations with nullable rule with value=null', function () {
-    $source = new \Rexpl\Struct\Sources\ArraySource(['data' => null]);
-    $validator = new \Rexpl\Struct\Internal\Validator([
+    $source = new ArraySource(['data' => null]);
+
+    $validator = new Validator();
+    $validator->addRules(
         new \Rexpl\Struct\Validation\Nullable(),
-        new \Tests\TestingObjects\OutputClassNameWhenRuleRuns(),
-    ]);
+        new OutputClassNameWhenRuleRuns(),
+    );
 
     ob_start();
     $validator->validate($source, 'data');
@@ -73,15 +78,78 @@ it('skips next validations with nullable rule with value=null', function () {
 });
 
 it('doesn\'t skip next validations with nullable rule with value!=null', function () {
-    $source = new \Rexpl\Struct\Sources\ArraySource(['data' => 'test']);
-    $validator = new \Rexpl\Struct\Internal\Validator([
+    $source = new ArraySource(['data' => 'test']);
+
+    $validator = new Validator();
+    $validator->addRules(
         new \Rexpl\Struct\Validation\Nullable(),
-        new \Tests\TestingObjects\OutputClassNameWhenRuleRuns(),
-    ]);
+        new OutputClassNameWhenRuleRuns(),
+    );
 
     ob_start();
     $validator->validate($source, 'data');
     $output = ob_get_clean();
 
-    expect($output)->toBe(\Tests\TestingObjects\OutputClassNameWhenRuleRuns::class);
+    expect($output)->toBe(OutputClassNameWhenRuleRuns::class);
+});
+
+it('skips next validations with optional rule with value not set', function () {
+    $source = new ArraySource([]);
+
+    $validator = new Validator();
+    $validator->addRules(
+        new \Rexpl\Struct\Validation\Optional(),
+        new OutputClassNameWhenRuleRuns(),
+    );
+
+    ob_start();
+    $validator->validate($source, 'data');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('');
+});
+
+it('doesn\'t skip next validations with optional rule with value set', function () {
+    $source = new ArraySource(['data' => 'test']);
+
+    $validator = new Validator();
+    $validator->addRules(
+        new \Rexpl\Struct\Validation\Optional(),
+        new OutputClassNameWhenRuleRuns(),
+    );
+
+    ob_start();
+    $validator->validate($source, 'data');
+    $output = ob_get_clean();
+
+    expect($output)->toBe(OutputClassNameWhenRuleRuns::class);
+});
+
+it('fails validations with required rule with value not set', function () {
+    $source = new ArraySource([]);
+
+    $validator = new Validator();
+    $validator->addRules(
+        new \Rexpl\Struct\Validation\Required(),
+        new OutputClassNameWhenRuleRuns(),
+    );
+
+    expect(fn () => $validator->validate($source, 'data'))
+        ->toThrow(\Rexpl\Struct\Exceptions\ValidationException::class);
+});
+
+it('runs next validations with required rule with value set', function () {
+    $source = new ArraySource(['data' => 'test']);
+
+    $validator = new Validator();
+    $validator->addRules(
+        new \Rexpl\Struct\Validation\Required(),
+        new OutputClassNameWhenRuleRuns(),
+    );
+
+    ob_start();
+    $validator->validate($source, 'data');
+    $output = ob_get_clean();
+
+    expect($output)->toBe(OutputClassNameWhenRuleRuns::class);
 });

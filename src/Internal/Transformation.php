@@ -7,6 +7,6 @@ namespace Rexpl\Struct\Internal;
 enum Transformation
 {
     case None;
-    case ChildStruct;
     case ArrayStruct;
+    case ChildStruct;
 }

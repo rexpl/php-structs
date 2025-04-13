@@ -25,4 +25,9 @@ readonly class IsInteger implements Rule
 
         return true;
     }
+
+    public function onlyRunWhenKeySet(): bool
+    {
+        return true;
+    }
 }

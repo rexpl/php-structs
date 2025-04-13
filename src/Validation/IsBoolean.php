@@ -20,4 +20,9 @@ readonly class IsBoolean implements Rule
 
         return true;
     }
+
+    public function onlyRunWhenKeySet(): bool
+    {
+        return true;
+    }
 }

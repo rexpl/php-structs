@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Rexpl\Struct\Sources;
+namespace Rexpl\Struct\Internal;
 
 use Rexpl\Struct\Contracts\Source;
 
