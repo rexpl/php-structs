@@ -1,28 +1,23 @@
 <?php
 
-use Rexpl\Struct\Options;
-use Rexpl\Struct\Struct;
-use Rexpl\Struct\Validate;
 use Rexpl\Struct\Validation\IsArray;
 use Rexpl\Struct\Validation\IsBoolean;
 use Rexpl\Struct\Validation\IsFloat;
 use Rexpl\Struct\Validation\IsInteger;
 use Rexpl\Struct\Validation\IsString;
 use Tests\TestingObjects\ValidationTestCase;
-use Tests\TestingObjects\WildCardValidationTester;
 
 test('validation rule: :dataset', function (ValidationTestCase $case) {
-        $struct = fn () => new class(['value' => $case->value], new Options(validate: true)) extends Struct {
-            #[Validate(new WildCardValidationTester())]
-            public mixed $value;
-        };
-
-        WildCardValidationTester::$rule = $case->rule;
+        $source = new \Rexpl\Struct\Sources\ArraySource(['data' => $case->value]);
 
         if ($case->fail) {
-            expect($struct)->toThrow(\Rexpl\Struct\Exceptions\ValidationException::class);
+            expect(
+                fn () => $case->rule->validate($source, 'data')
+            )->toThrow(\Rexpl\Struct\Exceptions\ValidationException::class);
         } else {
-            expect($struct())->toBeInstanceOf(Struct::class);
+            expect(
+                $case->rule->validate($source, 'data')
+            )->toBeTrue();
         }
     })
     ->with([
@@ -64,28 +59,28 @@ test('validation rule: :dataset', function (ValidationTestCase $case) {
     ]);
 
 it('skips next validations with nullable rule with value=null', function () {
+    $source = new \Rexpl\Struct\Sources\ArraySource(['data' => null]);
+    $validator = new \Rexpl\Struct\Internal\Validator([
+        new \Rexpl\Struct\Validation\Nullable(),
+        new \Tests\TestingObjects\OutputClassNameWhenRuleRuns(),
+    ]);
+
     ob_start();
-    $struct = new class (['data' => null], new Options(validate: true)) extends Struct {
-        #[Validate(
-            new \Rexpl\Struct\Validation\Nullable(),
-            new \Tests\TestingObjects\OutputClassNameWhenRuleRuns(),
-        )]
-        public $data;
-    };
+    $validator->validate($source, 'data');
     $output = ob_get_clean();
 
     expect($output)->toBe('');
 });
 
 it('doesn\'t skip next validations with nullable rule with value!=null', function () {
+    $source = new \Rexpl\Struct\Sources\ArraySource(['data' => 'test']);
+    $validator = new \Rexpl\Struct\Internal\Validator([
+        new \Rexpl\Struct\Validation\Nullable(),
+        new \Tests\TestingObjects\OutputClassNameWhenRuleRuns(),
+    ]);
+
     ob_start();
-    $struct = new class (['data' => 'test'], new Options(validate: true)) extends Struct {
-        #[Validate(
-            new \Rexpl\Struct\Validation\Nullable(),
-            new \Tests\TestingObjects\OutputClassNameWhenRuleRuns(),
-        )]
-        public $data;
-    };
+    $validator->validate($source, 'data');
     $output = ob_get_clean();
 
     expect($output)->toBe(\Tests\TestingObjects\OutputClassNameWhenRuleRuns::class);
