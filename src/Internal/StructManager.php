@@ -8,28 +8,28 @@ use Rexpl\Struct\Contracts\Source;
 use Rexpl\Struct\Options;
 use Rexpl\Struct\Struct;
 
-readonly class StructBuilder
+final readonly class StructManager
 {
     /** @var class-string<\Rexpl\Struct\Struct> */
     public string $struct;
 
-    /** @var \Rexpl\Struct\Internal\PropertyBuilder[] */
+    /** @var \Rexpl\Struct\Internal\PropertyManager[] */
     private array $properties;
 
     public function __construct(\ReflectionClass $struct)
     {
         $this->struct = $struct->getName();
 
-        $builders = [];
+        $propertyManagers = [];
         $properties = $struct->getProperties();
 
         foreach ($properties as $property) {
             if (!$property->isStatic() && !$property->isPrivate() && !$property->isReadOnly()) {
-                $builders[] = new PropertyBuilder($property);
+                $propertyManagers[] = new PropertyManager($property);
             }
         }
 
-        $this->properties = $builders;
+        $this->properties = $propertyManagers;
     }
 
     public function getProperties(Source $source, Options $options): array

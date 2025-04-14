@@ -14,7 +14,7 @@ use Rexpl\Struct\Options;
 use Rexpl\Struct\Struct;
 use Rexpl\Struct\Validate;
 
-final class PropertyBuilder
+final class PropertyManager
 {
     public readonly string $name;
     private string $key;

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Rexpl\Struct;
 
-use Rexpl\Struct\Internal\StructBuilder;
+use Rexpl\Struct\Internal\StructManager;
 use Rexpl\Struct\Internal\StructInternalState;
 
 final readonly class StructState
 {
     public function __construct(
         private StructInternalState $state,
-        private StructBuilder $structBuilder,
+        private StructManager $structManager,
         private Struct $struct,
     ) {}
 
@@ -22,7 +22,7 @@ final readonly class StructState
 
     public function validate(): void
     {
-        $this->structBuilder->validateStruct($this->struct);
+        $this->structManager->validateStruct($this->struct);
         $this->state->validated = true;
     }
 }

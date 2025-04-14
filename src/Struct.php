@@ -5,22 +5,22 @@ declare(strict_types=1);
 namespace Rexpl\Struct;
 
 use Rexpl\Struct\Internal\SourceFactory;
-use Rexpl\Struct\Internal\StructBuilder;
+use Rexpl\Struct\Internal\StructManager;
 use Rexpl\Struct\Internal\StructInternalState;
 
 abstract class Struct
 {
-    /** @var \Rexpl\Struct\Internal\StructBuilder[] */
-    private static array $builders = [];
+    /** @var \Rexpl\Struct\Internal\StructManager[] */
+    private static array $managers = [];
 
     private StructInternalState $structState__986cdf0686453a888;
 
     public function __construct(array|object $data, Options $options = new Options()) {
-        if (!\array_key_exists(static::class, self::$builders)) {
-            self::$builders[static::class] = new StructBuilder(new \ReflectionClass($this));
+        if (!\array_key_exists(static::class, self::$managers)) {
+            self::$managers[static::class] = new StructManager(new \ReflectionClass($this));
         }
 
-        $builder = self::$builders[static::class];
+        $builder = self::$managers[static::class];
         $source = SourceFactory::create($data);
 
         foreach ($builder->getProperties($source, $options) as [$name, $value]) {
@@ -32,6 +32,6 @@ abstract class Struct
 
     public function struct(): StructState
     {
-        return new StructState($this->structState__986cdf0686453a888, self::$builders[static::class], $this);
+        return new StructState($this->structState__986cdf0686453a888, self::$managers[static::class], $this);
     }
 }
