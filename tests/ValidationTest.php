@@ -3,12 +3,15 @@
 use Rexpl\Struct\Internal\ArraySource;
 use Rexpl\Struct\Internal\Validator;
 use Rexpl\Struct\Struct;
+use Rexpl\Struct\Validation\InEnum;
 use Rexpl\Struct\Validation\IsArray;
 use Rexpl\Struct\Validation\IsBoolean;
 use Rexpl\Struct\Validation\IsFloat;
 use Rexpl\Struct\Validation\IsInteger;
 use Rexpl\Struct\Validation\IsString;
 use Tests\Fixtures\OutputClassNameWhenRuleRuns;
+use Tests\Fixtures\TestingBackedEnum;
+use Tests\Fixtures\TestingEnum;
 use Tests\Fixtures\ValidationTestCase;
 
 test('validation rule: :dataset', function (ValidationTestCase $case) {
@@ -60,6 +63,14 @@ test('validation rule: :dataset', function (ValidationTestCase $case) {
         'is bool: valid true' => fn () => new ValidationTestCase(new IsBoolean(), false, true),
         'is bool: valid false' => fn () => new ValidationTestCase(new IsBoolean(), false, false),
         'is bool: invalid' => fn () => new ValidationTestCase(new IsBoolean(), true, 1),
+
+        'in enum (backed): valid case' => fn () => new ValidationTestCase(new InEnum(TestingBackedEnum::class), false, 'case_1'),
+        'in enum (backed): from enum case' => fn () => new ValidationTestCase(new InEnum(TestingBackedEnum::class), false, TestingBackedEnum::Case2),
+        'in enum (backed): invalid case' => fn () => new ValidationTestCase(new InEnum(TestingBackedEnum::class), true, 'case_3'),
+        'in enum (backed): different type' => fn () => new ValidationTestCase(new InEnum(TestingBackedEnum::class), true, 1),
+        'in enum (unit): valid case' => fn () => new ValidationTestCase(new InEnum(TestingEnum::class), false, TestingEnum::Case1),
+        'in enum (unit): invalid case' => fn () => new ValidationTestCase(new InEnum(TestingEnum::class), true, 1),
+        'in enum: from other enum' => fn () => new ValidationTestCase(new InEnum(TestingEnum::class), true, TestingBackedEnum::Case1),
     ]);
 
 it('skips next validations with nullable rule with value=null', function () {
@@ -177,4 +188,9 @@ test('deferred validation', function () {
     $this->expectOutputString(\Tests\Fixtures\OutputClassNameWhenRuleRuns::class);
 
     $struct->struct()->validate();
+});
+
+it('fails to try validation because not enum in enum validation', function () {
+    expect(fn () => new InEnum('not-an-enum'))
+        ->toThrow(InvalidArgumentException::class);
 });

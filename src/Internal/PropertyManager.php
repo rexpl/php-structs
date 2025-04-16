@@ -21,7 +21,8 @@ final class PropertyManager
     private readonly bool $hasDefaultValue;
     private Validator $validator;
     private Transformation $transformation = Transformation::None;
-    private ?string $targetTransformation = null;
+    private bool $targetAcceptsNull = true; // start with true because maybe not a typed property.
+    private string|AnonymousBackedEnum|null $targetTransformation = null;
 
     public function __construct(\ReflectionProperty $property)
     {
@@ -67,19 +68,25 @@ final class PropertyManager
             return;
         }
 
+        $this->targetAcceptsNull = $type->allowsNull();
+
         if ($this->transformation === Transformation::ArrayStruct && $type->getName() !== 'array') {
             throw new AmbiguousTypingException(\sprintf(
                 'Requested array struct for property "%s" without type array.', $this->name
             ));
         }
 
-        $potentialStruct = $type->getName();
-        if (
-            \class_exists($potentialStruct)
-            && \in_array(Struct::class, \class_parents($potentialStruct), true)
-        ) {
+        $class = $type->getName();
+        if (!\class_exists($class)) {
+            return;
+        }
+
+        if (\in_array(Struct::class, \class_parents($class), true)) {
             $this->transformation = Transformation::ChildStruct;
             $this->targetTransformation = $type->getName();
+        } elseif (\in_array(\BackedEnum::class, \class_implements($class), true)) {
+            $this->transformation = Transformation::BackedEnum;
+            $this->targetTransformation = new AnonymousBackedEnum($type->getName());
         }
     }
 
@@ -104,7 +111,7 @@ final class PropertyManager
     {
         if (!$source->has($this->key)) {
             throw new MissingRequiredValueException(\sprintf(
-                'Missing required value "%s" in struct "%s".', $this->key, $struct
+                'Missing required value "%s" in struct %s.', $this->key, $struct
             ));
         }
 
@@ -119,6 +126,9 @@ final class PropertyManager
 
             case Transformation::ChildStruct:
                 return $this->createChildStruct($value, $options, true);
+
+            case Transformation::BackedEnum:
+                return $this->createBackedEnum($value);
         }
 
         throw new \LogicException();
@@ -126,8 +136,7 @@ final class PropertyManager
 
     private function createArrayOfStructs(mixed $values, Options $options): ?array
     {
-        if ($values === null) {
-            // If this property is not nullable we let php throw a type error.
+        if ($values === null && $this->targetAcceptsNull) {
             return null;
         } elseif (!\is_array($values)) {
             throw new InvalidStructException(\sprintf(
@@ -140,8 +149,7 @@ final class PropertyManager
 
     private function createChildStruct(mixed $value, Options $options, bool $allowNull): ?Struct
     {
-        if ($allowNull && $value === null) {
-            // If this property is not nullable we let php throw a type error.
+        if ($allowNull && $value === null && $this->targetAcceptsNull) {
             return null;
         } elseif (\is_array($value) || \is_object($value)) {
             return new ($this->targetTransformation)($value, $options);
@@ -150,5 +158,27 @@ final class PropertyManager
                 'Cannot create child struct %s from %s.', $this->targetTransformation, \gettype($value)
             ));
         }
+    }
+
+    private function createBackedEnum(mixed $value): ?\BackedEnum
+    {
+        /** @var \Rexpl\Struct\Internal\AnonymousBackedEnum $enum */
+        $enum = $this->targetTransformation;
+
+        if ($enum->is($value)) {
+            return $value;
+        }
+
+        $try = $enum->try($value);
+
+        if ($try !== null) {
+            return $try;
+        } elseif (!$this->targetAcceptsNull) {
+            throw new InvalidStructException(\sprintf(
+                'Cannot create enum %s from supplied %s.', $enum->enum, \gettype($value)
+            ));
+        }
+
+        return null;
     }
 }

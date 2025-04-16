@@ -9,4 +9,5 @@ enum Transformation
     case None;
     case ArrayStruct;
     case ChildStruct;
+    case BackedEnum;
 }
